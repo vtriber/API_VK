@@ -2,30 +2,49 @@ import requests
 from pprint import pprint
 from vktoken import vktoken
 #
+class VkLoading():
 
-url = 'https://api.vk.com/method/photos.get'
-params = {'owner_id': '3660349',
-          'extended': '1',
-          'album_id': 'profile',
-          'access_token': vktoken,
-          'v': '5.131'}
-res = requests.get(url, params=params)
-inf_photo = res.json()
-# pprint(inf_photo['response']['items']['sizes'])
-# pprint(inf_photo)
+    def __init__(self, token):
+        self.token = token
 
-for select_photo in inf_photo['response']['items']:
-    # pprint(select_photo)
-    max_size = 0
-    for next_photo in select_photo['sizes']:
-        # print(next_photo['height'])
-        # print(next_photo['url'])
-        if next_photo['height'] >= max_size:
-            max_size = next_photo['height']
-            name_photo =
+    def req_photo_info(self, owner_id):
+        url = 'https://api.vk.com/method/photos.get'
+        params = {'owner_id': self.owner_id,
+                  'extended': '1',
+                  'album_id': 'profile',
+                  'access_token': self.token,
+                  'v': '5.131'}
+        res = requests.get(url, params=params)
+        return res.json()
+
+    def loading_photo(self, owner_id):
+        photo_copy = {}
+        all_photo_json = []
+        inf_photo = self.req_photo_info()
+        for select_photo in inf_photo['response']['items']:
+            max_size = 0
+            photo_json = {}
+            for size_photo in select_photo['sizes']:
+                if size_photo['height'] >= max_size:
+                    max_size = size_photo['height']
+                    url_photo = size_photo['url']
+                    size = size_photo['type']
+            if select_photo['likes']['count'] in photo_copy:
+                photo_name = f"{select_photo['likes']['count'] + select_photo['date']}.jpg"
+            else:
+                photo_name = f"{select_photo['likes']['count']}.jpg"
+
+            photo_copy[photo_name] = url_photo
+            photo_json['file_name'] = photo_name
+            photo_json['size'] = size
+            all_photo_json.append(photo_json)
 
 
-
+        pprint(all_photo_json)
+        pprint(photo_copy)
+owner_id = '3660349'
+vk = VkLoading(token=vktoken)
+vk.loading_photo(owner_id=owner_id)
 #pprint(
 #
 #
