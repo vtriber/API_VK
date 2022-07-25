@@ -1,7 +1,8 @@
 import os
 import dload
 import requests
-from pprint import pprint
+import json
+import time
 from vktoken import vktoken
 
 class VkLoading():
@@ -49,6 +50,9 @@ class VkLoading():
             print(f'Файл {filename} загружен на компьютер')
         print(f'Всего загружено {len(photo_copy)} файлов')
 
+        with open("vk.json", "w") as file:
+            json.dump(all_photo_json, file, indent=4)
+
 class YandexDisk:
 
     def __init__(self, token):
@@ -63,15 +67,15 @@ class YandexDisk:
         params = {'path': disk_file_path, 'overwrite': 'false'}
         response = requests.put(upload_url, headers=headers, params=params)
 
-    def _get_upload_link(self, disk_file_path):
+    def _get_upload_link(self, disk_file_path, file):
         upload_url = 'https://cloud-api.yandex.net/v1/disk/resources/upload'
         headers = self.get_headers()
         params = {'path': f'{disk_file_path}/{file}', 'overwrite': 'true'}
         response = requests.get(upload_url, headers=headers, params=params)
         return response.json()
 
-    def upload_file_to_disk(self, disk_file_path):
-        response_href = self._get_upload_link(disk_file_path=disk_file_path)
+    def upload_file_to_disk(self, disk_file_path, file):
+        response_href = self._get_upload_link(disk_file_path=disk_file_path, file=file)
         href = response_href.get('href', '')
         response = requests.put(href, data=open(f'{os.getcwd()}/{disk_file_path}/{file}', 'rb'))
 
@@ -93,11 +97,14 @@ def API_VK():
     percent = symbol_percent * file_percent
     step = 0
     for file in file_list:
-        ya.upload_file_to_disk(disk_file_path=folder)
+        ya.upload_file_to_disk(disk_file_path=folder, file=file)
         step += 1
         print('\n' * 100)
         print('Ход загрузки:')
         print(f'{percent * step} Загружено {file_percent * step} %')
+    time.sleep(2)
+    print('\n' * 100)
+    print(f'Загрузка завершена,\nвсего на Яндекс Диск загружено {hundred_percent} файлов')
 
 if __name__ == '__main__':
     API_VK()
