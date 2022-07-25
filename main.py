@@ -59,31 +59,34 @@ class YandexDisk:
     def get_headers(self):
         return {'Content-Type': 'application/json', 'Authorization': 'OAuth {}'.format(self.token)}
 
+    def creat_folder(self, disk_file_path):
+        upload_url = 'https://cloud-api.yandex.net/v1/disk/resources/'
+        headers = self.get_headers()
+        params = {'path': disk_file_path, 'overwrite': 'false'}
+        response = requests.put(upload_url, headers=headers, params=params)
+
     def _get_upload_link(self, disk_file_path):
         upload_url = 'https://cloud-api.yandex.net/v1/disk/resources/upload'
         headers = self.get_headers()
-        params = {'path': disk_file_path, 'overwrite': 'true'}
-        response = requests.put(upload_url, headers=headers, params=params)
-        # pprint(response.json())
+        params = {'path': f'{disk_file_path}/{file}', 'overwrite': 'true'}
+        response = requests.get(upload_url, headers=headers, params=params)
         return response.json()
 
     def upload_file_to_disk(self, disk_file_path):
+        response_href = self._get_upload_link(disk_file_path=disk_file_path)
+        href = response_href.get('href', '')
+        response = requests.put(href, data=open(f'{os.getcwd()}/{disk_file_path}/{file}', 'rb'))
 
-        file_list = os.listdir(disk_file_path)
-        for file in file_list:
-            response_href = self._get_upload_link(disk_file_path=f'{disk_file_path}/{file}')
-            href = response_href.get('href', '')
-            response = requests.put(href, data=open(f'{disk_file_path}/{file}', 'rb'))
-            response.raise_for_status()
-            if response.status_code == 201:
-                print('Success')
 
 
 owner_id = input('Введите ID аккаунта Вконтакте: ')
-folder = 'vkphoto'#input('Введите название папки куда будут загружены фотографии: ')
+folder = 'vkphoto'#input('Введите имя папки куда будут загружены фотографии: ')
 vk = VkLoading(token=vktoken, owner_id=owner_id, folder=folder)
 vk.loading_photo()
 
 token = input('Введите токен для доступа к Яндекс Диску: ')
 ya = YandexDisk(token=token)
-ya.upload_file_to_disk(disk_file_path=folder)
+ya.creat_folder(disk_file_path=folder)
+file_list = os.listdir(folder)
+for file in file_list:
+    ya.upload_file_to_disk(disk_file_path=folder)
