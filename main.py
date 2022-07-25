@@ -80,7 +80,7 @@ class YandexDisk:
 
 
 owner_id = input('Введите ID аккаунта Вконтакте: ')
-folder = 'vkphoto'#input('Введите имя папки куда будут загружены фотографии: ')
+folder = input('Введите имя папки куда будут загружены фотографии: ')
 vk = VkLoading(token=vktoken, owner_id=owner_id, folder=folder)
 vk.loading_photo()
 
